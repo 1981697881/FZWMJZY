@@ -5,7 +5,7 @@
 			<block slot="backText">返回</block>
 			<block slot="content">领料</block>
 		</cu-custom>
-		<uni-fab v-if="!isOrder" :pattern="pattern" :horizontal="horizontal" :vertical="vertical" :popMenu="popMenu" distable :direction="direction" @fabClick="fabClick"></uni-fab>
+		<!-- <uni-fab v-if="!isOrder" :pattern="pattern" :horizontal="horizontal" :vertical="vertical" :popMenu="popMenu" distable :direction="direction" @fabClick="fabClick"></uni-fab> -->
 		<zhilin-picker v-model="show" :data="chooseList" :title="title" @confirm="chooseClick" />
 		<view class="box getheight">
 			<view class="cu-bar bg-white solid-bottom" style="height: 60upx;">
@@ -29,7 +29,16 @@
 				</view>
 				<view class="action">
 					<view style="width: 90px;">仓库:</view>
-					<ld-select :list="stockList" disabled list-key="FName" value-key="FNumber" placeholder="请选择" clearable v-model="form.fdCStockId" @change="stockChange"></ld-select>
+					<ld-select
+						:list="stockList"
+						disabled
+						list-key="FName"
+						value-key="FNumber"
+						placeholder="请选择"
+						clearable
+						v-model="form.fdCStockId"
+						@change="stockChange"
+					></ld-select>
 				</view>
 			</view>
 			<view class="cu-bar bg-white solid-bottom" style="height: 60upx;">
@@ -100,7 +109,7 @@
 			</view>
 		</view>
 		<scroll-view scroll-y class="page" :style="{ height: pageHeight + 'px' }">
-			<!-- <view v-for="(item, index) in cuIList" :key="index">
+			<view v-for="(item, index) in cuIList" :key="index">
 				<view class="cu-list menu-avatar">
 					<view
 						class="cu-item"
@@ -133,52 +142,6 @@
 							</view>
 						</view>
 						<view class="move"><view class="bg-red" @tap="del(index, item)">删除</view></view>
-					</view>
-				</view>
-			</view> -->
-			<view class="selectTrees">
-				<!-- 一级分支 -->
-				<view class="lv1list" v-for="(item, index) in cuIList" :key="index" @longpress="deleteItem(index, item)">
-					<view class="tree-one" style="background: white;width: 100%;margin-top: 2px;height: 150upx;">
-						<!-- 单选框组件 -->
-						<checkbox-group v-if="showCheck" style="position: absolute;height: 80rpx;line-height: 150upx; left:20rpx;z-index: 1;">
-							<checkbox :checked="item.checked" @click="_chooseAll(item, index)" />
-						</checkbox-group>
-						<!-- 名字和iconfont -->
-						<label style="height:100%;display: flex;align-items: center;padding: 20rpx;position: relative;border-bottom: 1px solid #e4e4e4;" @click="_showlv2(index)">
-							<view style="clear: both;width: 100%;" class="grid text-center col-2">
-								<view class="itemT">编码:{{ item.number }}</view>
-								<view class="itemT">单位:{{ item.unitName }}</view>
-								<view class="itemT" style="width: 85% !important;text-align: left;margin-left: 110rpx;">名称:{{ item.name }}</view>
-								<view class="itemT" style="width: 85% !important;text-align: left;margin-left: 110rpx;">规格:{{ item.model }}</view>
-								<view class="itemT">应发数量:{{ item.Fauxqty }}</view>
-								<view class="itemT">实际数量:{{ item.FCounty }}</view>
-							</view>
-							<!-- <view class="deleteBtn" v-if="showDelete" @click.stop="deleteItem(item, index)">删除</view> -->
-							<i class="cuIcon-unfold" v-if="item.show" style="position: absolute;top: 40%;right: 2%;font-size: 48rpx;"></i>
-							<i class="cuIcon-fold" v-else style="position: absolute;top: 40%;right: 2%;font-size: 48rpx;"></i>
-						</label>
-					</view>
-					<!-- 二级分支 -->
-					<view v-if="item.show && item.childrenList">
-						<view class="tree-two" v-for="(item2, index2) in item.childrenList" :key="index2" style="display: flex;">
-							<view class="aui-list-item-inner flexIn">
-								<checkbox-group v-if="showCheck">
-									<checkbox v-if="!disableLv2Check" :checked="item2.checked" @click="_chooseOne(index, index2)" />
-									<checkbox :checked="item2.checked" disabled="true" v-else />
-								</checkbox-group>
-								<view style="clear: both;width: 100%;" class="grid text-center col-2">
-									<view class="itemO">批号:{{ item2.FBatchNo}}</view>
-									<view class="itemO">仓库:{{ item2.FStockName}}</view>
-									<view class="itemO">仓位:{{ item2.FStockPlacename }}</view>
-									<view class="itemO">库存数:{{ item2.FQty }}</view>
-									<view class="itemO" style="width: 80% !important;">
-										<view class="title" style="float: left;margin-left: 25%;" >出库数:</view>
-										<input name="input" @input='setQuty($event, index)' type="digit" style="font-size: 13px;text-align: left;border-bottom: 1px solid;" v-model="item2.quantity" />
-									</view>
-								</view>
-							</view>
-						</view>
 					</view>
 				</view>
 			</view>
@@ -275,6 +238,10 @@ export default {
 	onLoad: function(option) {
 		let me = this;
 		me.loadModal = true;
+		uni.$on('scancodedate', function(data) {
+			// _this 这里面的方法用这个 _this.code(data.code)
+			me.getScanInfo(data.code);
+		});
 		me.initMain();
 		if (JSON.stringify(option) != '{}') {
 			this.isOrder = true;
@@ -358,186 +325,11 @@ export default {
 			}
 		}
 	},
+	onUnload() {
+		// 移除监听事件
+		uni.$off('scancodedate');
+	},
 	methods: {
-		setQuty(val, index){
-			let list = this.cuIList[index].childrenList
-			let count = 0
-			list.forEach((item, index)=>{
-				if(item.checked){
-					if(item.quantity<= item.FQty){
-						if(item.quantity != '' && item.quantity != null){
-							count += Number(item.quantity)
-						}
-					}else{
-						uni.showToast({
-							icon: 'none',
-							title: '输入数量不能大于库数量'
-						});
-					}
-					
-				}
-			})
-			this.cuIList[index].FCounty = count
-		},
-		_showlv2(index) {
-			if(this.cuIList[index].isLoading){
-				//展开二级目录
-				if (this.cuIList[index].show) {
-					this.$set(this.cuIList[index], 'show', false);
-				} else {
-					this.$set(this.cuIList[index], 'show', true);
-				}
-			}else{
-				basic
-					.selectInvListByItemNumber({ itemNumber: this.cuIList[index].number })
-					.then(reso => {
-						if (reso.success) {
-							let data = reso.data;
-							data.forEach((item, index) =>{
-								item.quantity = 0
-								item.checked = false
-							})
-							this.cuIList[index].isLoading = true
-							this.cuIList[index].childrenList = data;
-							//展开二级目录
-							if (this.cuIList[index].show) {
-								this.$set(this.cuIList[index], 'show', false);
-							} else {
-								this.$set(this.cuIList[index], 'show', true);
-							}
-							this.$forceUpdate();
-						}
-					})
-					.catch(err => {
-						uni.showToast({
-							icon: 'none',
-							title: err.msg
-						});
-					});
-			}
-		},
-		_chooseAll(item, index) {
-			if(this.cuIList[index].isLoading){
-				//选中一级目录的所有 FCounty
-				let count = 0
-				if (this.cuIList[index].checked) {
-					this.$set(this.cuIList[index], 'checked', false);
-					this.cuIList[index].childrenList.forEach(item => {
-						item.checked = false;
-						count = 0
-					});
-				} else {
-					this.$set(this.cuIList[index], 'checked', true);
-					this.cuIList[index].childrenList.forEach(item => {
-						item.checked = true;
-						console.log(item)
-						if(item.quantity == '' || item.quantity ==null){
-							count+= Number(0)
-						}else{
-							count+= Number(item.quantity)
-						}
-					}); 
-				}
-				this.cuIList[index].FCounty = count
-				this.$set(this.cuIList[index], "show", true);
-			}else{
-			basic
-				.selectInvListByItemNumber({ itemNumber: this.cuIList[index].number })
-				.then(reso => {
-					if (reso.success) {
-						let data = reso.data;
-						this.cuIList[index].isLoading = true
-						data.forEach((item, index) =>{
-							item.quantity = 0
-							item.checked = false
-						})
-						this.cuIList[index].childrenList = data;
-						//选中一级目录的所有 FCounty
-						let count = 0
-						if (this.cuIList[index].checked) {
-							this.$set(this.cuIList[index], 'checked', false);
-							this.cuIList[index].childrenList.forEach(item => {
-								item.checked = false;
-								console.log(item)
-								if(item.quantity == '' || item.quantity ==null){
-									count+= Number(0)
-								}else{
-									count+= Number(item.quantity)
-								} 
-							});
-						} else {
-							this.$set(this.cuIList[index], 'checked', true);
-							this.cuIList[index].childrenList.forEach(item => {
-								item.checked = true;
-								console.log(item)
-								if(item.quantity == '' || item.quantity ==null){
-									count+= Number(0)
-								}else{
-									count+= Number(item.quantity)
-								}
-							}); 
-						}
-						this.cuIList[index].FCounty = count
-						this.$set(this.cuIList[index], "show", true);
-						this.$forceUpdate();
-					}
-				})
-				.catch(err => {
-					uni.showToast({
-						icon: 'none',
-						title: err.msg
-					});
-				});
-			}	
-			
-			
-			
-		},
-		_chooseOne(i1, i2) {
-			if (this.cuIList[i1].childrenList[i2].checked) {
-				//去掉勾选
-				this.$set(this.cuIList[i1], 'checked', true);
-				this.$set(this.cuIList[i1].childrenList[i2], 'checked', false);
-				if (this.cuIList[i1].childrenList.every(item => item.checked == false)) {
-					//判断是否全部都是选中
-					this.$set(this.cuIList[i1], 'checked', false);
-				}
-				if(this.cuIList[i1].childrenList[i2].quantity == '' || this.cuIList[i1].childrenList[i2].quantity == null){
-					return
-				}else{
-					this.cuIList[i1].FCounty = this.cuIList[i1].FCounty - Number(this.cuIList[i1].childrenList[i2].quantity)
-				}
-			} else {
-				//增加勾选
-				this.$set(this.cuIList[i1], 'checked', true);
-				this.$set(this.cuIList[i1].childrenList[i2], 'checked', true);
-				if (this.cuIList[i1].childrenList.every(item => item.checked == true)) {
-					//判断是否全部都是选中
-					this.$set(this.cuIList[i1], 'checked', true);
-				}
-				if(this.cuIList[i1].childrenList[i2].quantity == '' || this.cuIList[i1].childrenList[i2].quantity == null){
-					return
-				}else{
-					this.cuIList[i1].FCounty = this.cuIList[i1].FCounty + Number(this.cuIList[i1].childrenList[i2].quantity)
-				}
-			}
-		},
-		_computedFinalList() {
-			//计算最终的值
-			this.finalList = [];
-			this.cuIList.forEach(item => {
-				if (item.checked) {
-					this.finalList.push(JSON.parse(JSON.stringify(item))); //对象深拷贝 不然原数据会发生变化
-				}
-			});
-			this.finalList.forEach(item => {
-				item.childrenList.forEach((item2, index2) => {
-					if (!item2.checked) {
-						item.childrenList.splice(index2, 1);
-					}
-				});
-			});
-		},
 		deleteItem(item,index) {
 			let me = this
 			uni.showModal({
@@ -666,7 +458,7 @@ export default {
 					obj.fsourceTranType = list[i].fsourceTranType == null || list[i].fsourceTranType == 'undefined' ? '' : list[i].fsourceTranType;
 					obj.funitId = item.FUnitID;
 					array.push(obj);
-					}	
+					}
 				})
 			}
 			portData.items = array;
@@ -733,7 +525,7 @@ export default {
 							me.borrowItem.positions = me.popupForm.positions
 							me.borrowItem.quantity = me.popupForm.quantity
 							me.borrowItem.fbatchNo = me.popupForm.fbatchNo
-							me.modalName2 = null 
+							me.modalName2 = null
 						}else{
 							me.borrowItem.stockName = reso.data['stockName'];
 							me.borrowItem.stockId = reso.data['stockNumber'];
@@ -741,7 +533,7 @@ export default {
 							me.borrowItem.positions = ''
 							me.borrowItem.quantity = me.popupForm.quantity
 							me.borrowItem.fbatchNo = me.popupForm.fbatchNo
-							me.modalName2 = null 
+							me.modalName2 = null
 						}
 					}else{
 						uni.showToast({
@@ -756,13 +548,13 @@ export default {
 						icon: 'none',
 						title: '仓位已启用，请输入仓位！',
 					});
-				}else{ 
+				}else{
 					me.borrowItem.positions = ''
 					me.borrowItem.quantity = me.popupForm.quantity
 					me.borrowItem.fbatchNo = me.popupForm.fbatchNo
-					me.modalName2 = null 
+					me.modalName2 = null
 				}
-			} 
+			}
 		},
 		saveCom() {
 			var me = this;
@@ -781,7 +573,7 @@ export default {
 			} else {
 				me.submitCom()
 			}
-			
+
 		},
 		del(index, item) {
 			this.cuIList.splice(index, 1);
@@ -991,37 +783,70 @@ export default {
 		},
 		fabClick() {
 			var that = this;
+			let number = 0;
 			uni.scanCode({
 				success: function(res) {
-					basic
-						.inventoryByBarcode({ uuid: res.result })
-						.then(reso => {
-							if (reso.success) {
-								that.chooseList = [];
-								for (let i in reso.data) {
-									that.chooseList.push(reso.data[i]);
-								}
-								that.show = true;
-							}
-						})
-						.catch(err => {
-							uni.showToast({
-								icon: 'none',
-								title: err.msg
-							});
-						});
+					that.getScanInfo(res.result);
 				}
 			});
-		}, // ListTouch触摸开始
+		},
+		getScanInfo(res) {
+			var that = this;
+			let number = 0;
+			if (!that.isOrder) {
+				let resData = res.split(',');
+					for (let i in that.cuIList) {
+						if(resData[0] == that.cuIList[i]['ForderID'] && resData[1] == that.cuIList[i]['FOrderEntryID']){
+							if (that.cuIList[i]['onFBarCode'].indexOf(resData[0]+','+resData[1]+','+resData[2])) {
+								that.cuIList[i]['onFBarCode'].push(resData[0]+','+resData[1]+','+resData[2])
+								that.cuIList[i]['FAuxStockQty'] = (parseFloat(resData[3]) + parseFloat(that.cuIList[i]['FAuxStockQty']))
+								number++;
+							}else{
+								uni.showToast({
+									icon: 'none',
+									title: '该条码已扫描！'
+								});
+								break;
+							}
+						}
+					}
+					console.log(number)
+					if(number == 0){
+						that.cuIList.push({
+							Fdate: resData[0],
+							number: resData[0],
+							name: resData[0],
+							model: resData[0],
+							Fauxprice: resData[0],
+							Famount: resData[0],
+							onFBarCode: [],
+							FBatchManager: resData[0],
+							fsourceBillNo: resData[0],
+							fsourceEntryID: resData[0],
+							quantity: 1,
+							Fauxqty: resData[0],
+							fsourceTranType: resData[0],
+							unitID: resData[0],
+							unitName: resData[0]
+						});
+					}
+			}else{
+				if(number == that.cuIList.length){
+					uni.showToast({
+						icon: 'none',
+						title: '该物料不在所选单据中！'
+					});
+				}
+			}
+		},
+		// ListTouch触摸开始
 		ListTouchStart(e) {
 			this.listTouchStart = e.touches[0].pageX;
 		},
-
 		// ListTouch计算方向
 		ListTouchMove(e) {
 			this.listTouchDirection = e.touches[0].pageX - this.listTouchStart > 0 ? 'right' : 'left';
 		},
-
 		// ListTouch计算滚动
 		ListTouchEnd(e) {
 			if (this.listTouchDirection == 'left') {
@@ -1121,4 +946,3 @@ export default {
 	width: 100%;
 }
 </style>
-

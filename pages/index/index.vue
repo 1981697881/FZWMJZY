@@ -16,7 +16,7 @@ export default {
 	data() {
 		return {
 			PageCur: 'component',
-			totalSize: 0,
+			totalSize: 0, 
 			baifen: 0
 		};
 	},
@@ -37,8 +37,6 @@ export default {
 						login
 							.login(data)
 							.then(res => {
-								console.log(123);
-								console.log(res);
 								if (res.success) {
 									data.userId = res.data['userId'];
 									data.username = res.data['username'];

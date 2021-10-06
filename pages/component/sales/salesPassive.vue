@@ -194,7 +194,7 @@ export default {
 								ForderID: data[i].ForderID,
 								FBarCode: data[i].FBarCode,
 								Fauxprice: data[i].Fauxprice,
-								fsourceEntryID: data[i].FEntryID,
+								fsourceEntryId: data[i].FEntryID,
 								fsourceTranType: data[i].FTranType,
 								quantity: data[i].Fauxqty,
 								unitID: data[i].FUnitNumber,
@@ -370,7 +370,7 @@ export default {
 					result.push(list[i].index);
 				}
 				obj.fsourceBillNo = list[i].fsourceBillNo == null || list[i].fsourceBillNo == 'undefined' ? '' : list[i].fsourceBillNo;
-				obj.fsourceEntryID = list[i].fsourceEntryID == null || list[i].fsourceEntryID == 'undefined' ? '' : list[i].fsourceEntryID;
+				obj.fsourceEntryId = list[i].fsourceEntryId == null || list[i].fsourceEntryId == 'undefined' ? '' : list[i].fsourceEntryId;
 				obj.fsourceTranType = list[i].fsourceTranType == null || list[i].fsourceTranType == 'undefined' ? '' : list[i].fsourceTranType;
 				obj.funitId = list[i].unitID;
 				array.push(obj);
@@ -390,8 +390,8 @@ export default {
 				});
 				this.isClick = false;
 				return;
-			} 
-			console.log(JSON.stringify(portData))
+			}
+			/* console.log(JSON.stringify(portData)) */
 			if (result.length == 0) {
 				if (portData.fcustId != '' && typeof portData.fcustId != 'undefined') {
 					/* if (isBatchNo) { */
@@ -521,18 +521,16 @@ export default {
 				for (let i in that.cuIList) {
 					if(resData[0] == that.cuIList[i]['ForderID'] && resData[1] == that.cuIList[i]['FOrderEntryID']){
 						if (that.cuIList[i]['onFBarCode'].indexOf(resData[0]+','+resData[1]+','+resData[2])) {
-							console.log((parseFloat(resData[3]) + parseFloat(that.cuIList[i]['FAuxStockQty'])))
-							console.log( parseFloat(that.cuIList[i]['quantity']))
-							if((parseFloat(resData[3]) + parseFloat(that.cuIList[i]['FAuxStockQty']))< parseFloat(that.cuIList[i]['quantity'])){
+							/* if((parseFloat(resData[3]) + parseFloat(that.cuIList[i]['FAuxStockQty']))< parseFloat(that.cuIList[i]['quantity'])){ */
 								that.cuIList[i]['onFBarCode'].push(resData[0]+','+resData[1]+','+resData[2])
 								that.cuIList[i]['FAuxStockQty'] = (parseFloat(resData[3]) + parseFloat(that.cuIList[i]['FAuxStockQty']))
-							}else{
+							/* }else{
 								uni.showToast({
 									icon: 'none',
 									title: '实发数量不能大于订单数量！'
 								});
 								break;
-							}
+							} */
 						}else{
 							uni.showToast({
 								icon: 'none',

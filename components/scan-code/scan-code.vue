@@ -29,13 +29,15 @@ export default {
 		    main = plus.android.runtimeMainActivity();//获取activity  
 		    var IntentFilter = plus.android.importClass('android.content.IntentFilter');   
 		    filter = new IntentFilter();   
-		    filter.addAction("niscan.action.SCANNER_RESULT"); // 换你的广播动作  
+		    filter.addAction("android.intent.action.SCANRESULT"); // 换你的广播动作  
 		    receiver = plus.android.implements('io.dcloud.feature.internal.reflect.BroadcastReceiver',{  
 		    onReceive : function(context, intent) {  
 		        plus.android.importClass(intent);     
-		        let code = intent.getStringExtra("SCAN_BARCODE1");// 换你的广播标签  
+		        let code = intent.getStringExtra("value");// 换你的广播标签  
+				console.log(code)
 		        _this.queryCode(code);  
-		    }});    
+		    }});
+			console.log(receiver)
 		},
 		startScan() {
 			 //注册监听

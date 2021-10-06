@@ -60,7 +60,6 @@
 					data[i].title = data[i].name.substring(disLength-3,disLength)
 					data[i].name  = data[i].name.substring(0,disLength-3)
 				}
-				console.log(data)
 				this.elements = data
 			})
 		  }

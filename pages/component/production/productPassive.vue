@@ -500,12 +500,12 @@ export default {
 				if(reso.success){ FBarCode*/
 				let number = 0;
 			if (that.isOrder) {
+				let resData = res.split(',')
 				for (let i in that.cuIList) {
-					console.log(res == that.cuIList[i]['FBarCode'])
-					if (res == that.cuIList[i]['FBarCode']) {
+					let codeData = that.cuIList[i]['FBarCode'].split(',')
+					if ((resData[0]+resData[1]+resData[2]+resData[3]+resData[4]) == (codeData[0]+codeData[1]+codeData[2]+codeData[3]+codeData[4])) {
 						if (that.cuIList[i]['onFBarCode'] == '') {
-							let resData = res.split(',')
-							that.cuIList[i]['onFBarCode'] = res
+							that.cuIList[i]['onFBarCode'] = (resData[0]+resData[1]+resData[2]+resData[3]+resData[4])
 							that.cuIList[i]['FAuxStockQty'] = resData[3]
 						}else{
 							uni.showToast({
@@ -514,9 +514,8 @@ export default {
 							});
 							break;
 						}
-					} else {
+					}  else {
 						number ++;
-						
 					}
 				}
 				if(number == that.cuIList.length){
