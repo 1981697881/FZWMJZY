@@ -376,7 +376,7 @@ export default {
 				array.push(obj);
 			}
 			portData.items = array;
-			portData.ftranType = 21;
+			portData.ftranType = 2101;
 			portData.finBillNo = this.form.finBillNo;
 			portData.fdate = this.form.fdate;
 			portData.fbillerID = this.form.fbillerID;

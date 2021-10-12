@@ -69,49 +69,6 @@
 				</view>
 			</view>
 		</view>
-		<view class="cu-modal" :class="modalName2 == 'Modal' ? 'show' : ''">
-			<view class="cu-dialog" style="height: 460upx;">
-				<view class="cu-bar bg-white justify-end" style="height: 60upx;">
-					<view class="content">{{ popupForm.headName }}</view>
-					<view class="action" @tap="hideModal2"><text class="cuIcon-close text-red"></text></view>
-				</view>
-				<view>
-					<view class="cu-item" style="width: 100%;">
-						<view class="flex">
-							<view class="flex-sub">
-								<view class="cu-form-group">
-									<view class="title">批号:</view>
-									<input name="input" style="border-bottom: 1px solid;" v-model="popupForm.fbatchNo" />
-								</view>
-							</view>
-							<view class="flex-sub">
-								<view class="cu-form-group">
-									<view class="title">数量:</view>
-									<input name="input" type="digit" style="border-bottom: 1px solid;" v-model="popupForm.quantity" />
-								</view>
-							</view>
-						</view>
-					</view>
-					<view class="cu-item" style="width: 100%;">
-						<view class="flex">
-							<view class="flex-sub">
-								<view class="cu-form-group">
-									<view class="title">库位:</view>
-									<input name="input" style="border-bottom: 1px solid;" v-model="popupForm.positions" />
-									<button class="cu-btn round lines-red line-red shadow" @tap="$manyCk(scanPosition)">扫码</button>
-								</view>
-							</view>
-						</view>
-					</view>
-				</view>
-				<view style="clear: both;" class="cu-bar bg-white justify-end padding-bottom-xl">
-					<view class="action">
-						<button class="cu-btn line-green text-green" @tap="hideModal2">取消</button>
-						<button class="cu-btn bg-green margin-left" @tap="$manyCk(saveCom)">确定</button>
-					</view>
-				</view>
-			</view>
-		</view>
 		<scroll-view scroll-y class="page" :style="{ height: pageHeight + 'px' }">
 			<view v-for="(item, index) in cuIList" :key="index">
 				<view class="cu-list menu-avatar">
@@ -125,7 +82,7 @@
 						:data-target="'move-box-' + index"
 					>
 						<view style="clear: both;width: 100%;">
-							<view style="clear: both;width: 100%;" class="grid text-center col-2" @tap="showModal2(index, item)" data-target="Modal" data-number="item.number">
+							<view style="clear: both;width: 100%;" class="grid text-center col-2" data-target="Modal" data-number="item.number">
 								<view class="text-grey">序号:{{ (item.index = index + 1) }}</view>
 								<view class="text-grey">编码:{{ item.number }}</view>
 								<view class="text-grey">名称:{{ item.name }}</view>
@@ -198,11 +155,6 @@ export default {
 				FSupplyID: ''
 			},
 			borrowItem: {},
-			popupForm: {
-				fbatchNo: '',
-				positions: '',
-				quantity: ''
-			},
 			skin: false,
 			listTouchStart: 0,
 			listTouchDirection: null,
@@ -260,7 +212,6 @@ export default {
 						let data = res.data.list;
 						me.form.FSupplyName = data[0].FSupplyName;
 						me.form.FPOStyle = data[0].FPOStyle;
-						me.form.bNum = data.length;
 						for (let i in data) {
 							me.cuIList.push({
 								Fdate: data[i].Fdate,
@@ -268,8 +219,10 @@ export default {
 								name: data[i].FItemName,
 								model: data[i].FModel,
 								FNoteType: data[i].FNoteType,
-								quantity: data[i].Fauxqty,
+								quantity: 0,
+								bNum: 0,
 								Fauxqty: data[i].Fauxqty,
+								fbatchNo: '',
 								FBatchManager: data[i].FBatchManager,
 								fsourceBillNo: data[i].FBillNo,
 								Fauxprice: data[i].Fauxprice,
@@ -422,25 +375,8 @@ export default {
 				obj.famount = list[i].Famount != null && typeof list[i].Famount != 'undefined' ? list[i].Famount : 0;
 				obj.fdCSPId = list[i].positions;
 				obj.fitemId = list[i].number;
-				if (list[i].FBatchManager) {
-					if (list[i].fbatchNo != '' && list[i].fbatchNo != null) {
-						obj.fbatchNo = list[i].fbatchNo;
-						isBatchNo = true;
-					} else {
-						isBatchNo = false;
-						batchMsg = '批号已启用，不允许为空';
-						break;
-					}
-				} else {
-					if (list[i].fbatchNo == '' || list[i].fbatchNo == null) {
-						obj.fbatchNo = list[i].fbatchNo;
-						isBatchNo = true;
-					} else {
-						isBatchNo = false;
-						batchMsg = '批号未启用，不允许输入';
-						break;
-					}
-				}
+				obj.fbatchNo = list[i].fbatchNo;
+				obj.fpackNum = list[i].bNum;
 				if (list[i].stockId == null || typeof list[i].stockId == 'undefined') {
 					result.push(list[i].index);
 				}
@@ -460,44 +396,37 @@ export default {
 			portData.fsupplyId = this.form.FSupplyID;
 			portData.fpostyle = this.form.FPOStyle;
 			portData.fdeptId = this.form.fdeptID;
+			console.log(JSON.stringify(portData));
 			if (result.length == 0) {
 				if (portData.fsupplyId != '' && typeof portData.fsupplyId != 'undefined') {
-					if (isBatchNo) {
-						procurement
-							.purchaseStockIn(portData)
-							.then(res => {
-								if (res.success) {
-									this.cuIList = [];
-									uni.showToast({
-										icon: 'success',
-										title: res.msg
-									});
-									this.form.bNum = 0;
-									this.initMain();
-									if (this.isOrder) {
-										setTimeout(function() {
-											uni.$emit('handleBack', { startDate: me.startDate, endDate: me.endDate, source: me.source });
-											uni.navigateBack({
-												url: '../procurement/procurementActive'
-											});
-										}, 1000);
-									}
-								}
-							})
-							.catch(err => {
+					procurement
+						.purchaseStockIn(portData)
+						.then(res => {
+							if (res.success) {
+								this.cuIList = [];
 								uni.showToast({
-									icon: 'none',
+									icon: 'success',
 									title: res.msg
 								});
-								this.isClick = false;
+								this.form.bNum = 0;
+								this.initMain();
+								if (this.isOrder) {
+									setTimeout(function() {
+										uni.$emit('handleBack', { startDate: me.startDate, endDate: me.endDate, source: me.source });
+										uni.navigateBack({
+											url: '../procurement/procurementActive'
+										});
+									}, 1000);
+								}
+							}
+						})
+						.catch(err => {
+							uni.showToast({
+								icon: 'none',
+								title: res.msg
 							});
-					} else {
-						uni.showToast({
-							icon: 'none',
-							title: batchMsg
+							this.isClick = false;
 						});
-						this.isClick = false;
-					}
 				} else {
 					uni.showToast({
 						icon: 'none',
@@ -513,109 +442,17 @@ export default {
 				this.isClick = false;
 			}
 		},
-		submitCom() {
-			var me = this;
-			if (me.popupForm.positions != '' && me.popupForm.positions != null) {
-				basic.selectFdCStockIdByFdCSPId({ fdCSPId: me.popupForm.positions }).then(reso => {
-					if (reso.data != null && reso.data != '') {
-						if (reso.data['FIsStockMgr']) {
-							me.borrowItem.stockName = reso.data['stockName'];
-							me.borrowItem.stockId = reso.data['stockNumber'];
-							me.borrowItem.FIsStockMgr = reso.data['FIsStockMgr'];
-							me.borrowItem.positions = me.popupForm.positions;
-							me.borrowItem.quantity = me.popupForm.quantity;
-							me.borrowItem.fbatchNo = me.popupForm.fbatchNo;
-							me.modalName2 = null;
-						} else {
-							me.borrowItem.stockName = reso.data['stockName'];
-							me.borrowItem.stockId = reso.data['stockNumber'];
-							me.borrowItem.FIsStockMgr = reso.data['FIsStockMgr'];
-							me.borrowItem.positions = '';
-							me.borrowItem.quantity = me.popupForm.quantity;
-							me.borrowItem.fbatchNo = me.popupForm.fbatchNo;
-							me.modalName2 = null;
-						}
-					} else {
-						uni.showToast({
-							icon: 'none',
-							title: '该库位不存在仓库中！'
-						});
-					}
-				});
-			} else {
-				if (me.popupForm.FIsStockMgr) {
-					return uni.showToast({
-						icon: 'none',
-						title: '仓位已启用，请输入仓位！'
-					});
-				} else {
-					me.borrowItem.positions = '';
-					me.borrowItem.quantity = me.popupForm.quantity;
-					me.borrowItem.fbatchNo = me.popupForm.fbatchNo;
-					me.modalName2 = null;
-				}
-			}
-		},
-		saveCom() {
-			var me = this;
-			if (this.popupForm.quantity > me.borrowItem.Fauxqty) {
-				uni.showModal({
-					title: '温馨提示',
-					content: '实际入库数量大于订单数量！请确认！',
-					success: function(res) {
-						if (res.confirm) {
-							me.submitCom();
-						} else if (res.cancel) {
-							return;
-						}
-					}
-				});
-				/* uni.showToast({
-						icon: 'none',
-						title: '入库数量不能大于订单数量',
-					});
-					this.popupForm.quantity = 0 */
-			} else {
-				me.submitCom();
-			}
-		},
 		del(index, item) {
 			this.cuIList.splice(index, 1);
-			this.form.bNum = this.cuIList.length;
+			this.cuIList.forEach(item => {
+				this.form.bNum += parseFloat(item.bNum);
+			});
 		},
 		showModal(e) {
 			this.modalName = e.currentTarget.dataset.target;
 		},
 		hideModal(e) {
 			this.modalName = null;
-		},
-		showModal2(index, item) {
-			/* if(item.stockId == null || item.stockId == ''){
-					return uni.showToast({
-						icon: 'none',
-						title: '请先选择仓库！',
-					}); 
-				} */
-			this.modalName2 = 'Modal';
-			if (item.fbatchNo == null || typeof item.fbatchNo == 'undefined') {
-				item.fbatchNo = '';
-			}
-			if (item.positions == null || typeof item.positions == 'undefined') {
-				item.positions = '';
-			}
-			if (item.quantity == null || typeof item.quantity == 'undefined') {
-				item.quantity = '';
-			}
-			this.popupForm = {
-				quantity: item.quantity,
-				fbatchNo: item.fbatchNo,
-				FIsStockMgr: item.FIsStockMgr,
-				positions: item.positions
-			};
-			this.borrowItem = item;
-		},
-		hideModal2(e) {
-			this.modalName2 = null;
 		},
 		// 查询前后三天日期
 		getDay(date, day) {
@@ -675,26 +512,6 @@ export default {
 			this.$set(item, 'positions', '');
 			this.$set(item, 'FIsStockMgr', this.stockList[e.detail.value].FIsStockMgr);
 		},
-		scanPosition() {
-			let me = this;
-			uni.scanCode({
-				success: function(res) {
-					basic.selectFdCStockIdByFdCSPId({ fdCSPId: res.result }).then(reso => {
-						if (reso.data != null && reso.data != '') {
-							me.popupForm.positions = res.result;
-							me.popupForm.stockName = reso.data['stockName'];
-							me.popupForm.stockId = reso.data['stockNumber'];
-							me.popupForm.FIsStockMgr = reso.data['FIsStockMgr'];
-						} else {
-							uni.showToast({
-								icon: 'none',
-								title: '该库位不存在仓库中！'
-							});
-						}
-					});
-				}
-			});
-		},
 		fabClick() {
 			var that = this;
 			uni.scanCode({
@@ -706,103 +523,66 @@ export default {
 		//获取扫码结果
 		getScanInfo(res) {
 			var that = this;
-			basic
-				.barcodeScanT({ uuid: res })
-				.then(reso => {
-					console.log(reso)
-					if (reso.success) {
-						if (that.isOrder) {
-							//if(reso.data['billNo'] == this.billNo){
-							let number = 0;
-							for (let i in that.cuIList) {
-								if (reso.data['number'] == that.cuIList[i]['number']) {
-									if (reso.data['stockNumber'] == that.cuIList[i]['stockId'] && reso.data['batchNo'] == that.cuIList[i]['fbatchNo']) {
-										if (reso.data['quantity'] == null) {
-											reso.data['quantity'] = 1;
-										}
-										if (reso.data['isEnable'] == 2) {
-											reso.data['uuid'] = null;
-										}
-										that.cuIList[i]['quantity'] = parseFloat(that.cuIList[i]['quantity']) + parseFloat(reso.data['quantity']);
-										number++;
-										break;
-									}
+			let number = 0;
+			if (that.isOrder) {
+				let resData = res.split(',');
+				for (let i in that.cuIList) {
+					if (resData[0] == that.cuIList[i]['number']) {
+						if (that.cuIList[i]['onFBarCode'] != res) {
+							if (that.cuIList[i]['fbatchNo'] == '') {
+								that.cuIList[i]['quantity'] = resData[2];
+								that.cuIList[i]['fbatchNo'] = resData[1];
+								that.cuIList[i]['bNum'] = resData[3];
+								that.cuIList[i]['onFBarCode'] = res
+								that.form.bNum += parseFloat(resData[3]);
+							} else {
+								if (resData[1] == that.cuIList[i]['fbatchNo']) {
+									that.cuIList[i]['quantity'] = parseFloat(that.cuIList[i]['quantity']) + parseFloat(resData[2]);
+									that.cuIList[i]['bNum'] = parseFloat(that.cuIList[i]['bNum']) + parseFloat(resData[3]);
+									that.form.bNum += parseFloat(resData[3]);
 								} else {
-									uni.showToast({
-										icon: 'none',
-										title: '该物料不在所选列表中！'
+									that.form.bNum += parseFloat(resData[3]); 
+									that.cuIList.push({
+										Fdate: that.cuIList[i]['Fdate'],
+										number: that.cuIList[i]['number'],
+										name: that.cuIList[i]['name'],
+										model: that.cuIList[i]['model'],
+										FNoteType: that.cuIList[i]['FNoteType'],
+										quantity: resData[2],
+										bNum: resData[3],
+										onFBarCode: res,
+										Fauxqty: that.cuIList[i]['Fauxqty'],
+										fbatchNo: resData[1],
+										FBatchManager: that.cuIList[i]['FBatchManager'],
+										fsourceBillNo: that.cuIList[i]['fsourceBillNo'],
+										Fauxprice: that.cuIList[i]['Fauxprice'],
+										Famount: that.cuIList[i]['Famount'],
+										fsourceBillNo: that.cuIList[i]['fsourceBillNo'],
+										fsourceTranType: that.cuIList[i]['fsourceTranType'],
+										fsourceEntryID: that.cuIList[i]['fsourceEntryID'],
+										unitID: that.cuIList[i]['unitID'],
+										unitName: that.cuIList[i]['unitName']
 									});
-									number++;
-									break;
 								}
 							}
-							if (number == 0) {
-								if (reso.data['quantity'] == null) {
-									reso.data['quantity'] = 1;
-								}
-								if (reso.data['isEnable'] == 2) {
-									reso.data['uuid'] = null;
-								}
-								reso.data.stockName = reso.data.stockNumber;
-								reso.data.stockId = reso.data.warehouse;
-								reso.data.FIsStockMgr = reso.data.FIsStockMgr;
-								reso.data.fbatchNo = reso.data.batchNo;
-								that.cuIList.push(reso.data);
-								that.form.bNum = that.cuIList.length;
-							}
-							/* }else{
+						}else{
 							uni.showToast({
 								icon: 'none',
-								title: '该物料不在所选单据中！',
+								title: '该条码已扫描！'
 							});
-						} */
-						} else {
-							let reData = reso.data;
-							for (let rsItem of reData) {
-								let number = 0;
-								for (let i in that.cuIList) {
-									if (
-										rsItem['number'] == that.cuIList[i]['number'] &&
-										rsItem['uuid'] == that.cuIList[i]['uuid'] &&
-										rsItem['batchNo'] == that.cuIList[i]['fbatchNo']
-									) {
-										if (rsItem['quantity'] == null) {
-											rsItem['quantity'] = 1;
-										}
-										if (rsItem['isEnable'] == 2) {
-											rsItem['uuid'] = null;
-										}
-										that.cuIList[i]['quantity'] = parseFloat(that.cuIList[i]['quantity']) + parseFloat(rsItem['quantity']);
-										number++;
-										break;
-									}
-								}
-								if (number == 0) {
-									if (rsItem['quantity'] == null) {
-										rsItem['quantity'] = 1;
-									}
-									if (rsItem['isEnable'] == 2) {
-										rsItem['uuid'] = null;
-									}
-									rsItem.stockName = that.form.fdCStockName
-									rsItem.stockId = that.form.fdCStockId
-									rsItem.FIsStockMgr = rsItem.FIsStockMgr;
-									rsItem.fbatchNo = rsItem.batchNo;
-									rsItem.name = rsItem.NAME;
-									console.log(rsItem);
-									that.cuIList.push(rsItem);
-									that.form.bNum = that.cuIList.length;
-								}
-							}
+							break;
 						}
+					} else {
+						number++;
 					}
-				})
-				.catch(err => {
+				}
+				if (number == that.cuIList.length) {
 					uni.showToast({
 						icon: 'none',
-						title: err.msg
+						title: '该物料不在所选单据中！'
 					});
-				});
+				}
+			}
 		},
 		// ListTouch触摸开始
 		ListTouchStart(e) {

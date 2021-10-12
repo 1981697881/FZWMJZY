@@ -34,10 +34,8 @@ export default {
 		    onReceive : function(context, intent) {  
 		        plus.android.importClass(intent);     
 		        let code = intent.getStringExtra("value");// 换你的广播标签  
-				console.log(code)
 		        _this.queryCode(code);  
 		    }});
-			console.log(receiver)
 		},
 		startScan() {
 			 //注册监听

@@ -123,7 +123,8 @@ export default {
 	        },
 			data: params
 	    });
-	},//根据物料查库存 
+	},
+	//根据物料查库存 
 	selectInvListByItemNumber(params) {
 	    return Request().get('/api/invCheck/selectInvListByItemNumber', {
 	        header: {
@@ -131,7 +132,17 @@ export default {
 	        },
 			data: params
 	    });
-	},//获取更新
+	},
+	//获取物料
+	getItemList(params) {
+	    return Request().post('/item/itemList/1/20', {
+	        header: {
+				contentType: 'application/json',
+	        },
+			data: params
+	    });
+	},
+	//获取更新
 	getAndroidVersion(params) {
 	    return Request().post('/api/basic/getAndroidVersion', {
 	        header: {
