@@ -78,7 +78,6 @@
 							<view class="text-grey">编码:{{ item.number }}</view>
 							<view class="text-grey">名称:{{ item.name }}</view>
 							<view class="text-grey">数量:{{ item.quantity }}</view>
-							<view class="text-grey">实发数量:{{ item.FAuxStockQty }}</view>
 							<view class="text-grey">批号:{{ item.fbatchNo }}</view>
 							<view class="text-grey">单位:{{ item.unitName }}</view>
 							<view class="text-grey">规格:{{ item.model }}</view>
@@ -150,6 +149,7 @@ export default {
 				buttonColor: '#007AFF'
 			},
 			cuIList: [],
+			dataList: [],
 			startDate: null,
 			endDate: null,
 			billNo: null
@@ -179,8 +179,9 @@ export default {
 				.then(res => {
 					if (res.success) {
 						let data = res.data.list;
+						console.log(data)
 						for (let i in data) {
-							me.cuIList.push({
+							me.dataList.push({
 								Fdate: data[i].Fdate,
 								number: data[i].FItemNumber,
 								name: data[i].FItemName,
@@ -189,9 +190,9 @@ export default {
 								fsourceBillNo: data[i].FBillNo,
 								Famount: data[i].Famount,
 								onFBarCode: [],
-								FAuxStockQty: 0,
 								FOrderEntryID: data[i].FOrderEntryID,
 								ForderID: data[i].ForderID,
+								FPrdBillNo: data[i].FPrdBillNo,
 								FBarCode: data[i].FBarCode,
 								Fauxprice: data[i].Fauxprice,
 								fsourceEntryId: data[i].FEntryID,
@@ -201,7 +202,7 @@ export default {
 								unitName: data[i].FUnitName
 							});
 						}
-						me.form.bNum = res.data.list.length;
+						/* me.form.bNum = res.data.list.length; */
 					}
 				})
 				.catch(err => {
@@ -339,7 +340,7 @@ export default {
 			let isBatchNo = false;
 			for (let i in list) {
 				let obj = {};
-				obj.fauxqty = list[i].FAuxStockQty;
+				obj.fauxqty = list[i].quantity;
 				obj.fentryId = list[i].index;
 				obj.finBillNo = list[i].FBillNo;
 				/* if (list[i].FBatchManager) {
@@ -366,7 +367,7 @@ export default {
 				/* if (list[i].stockId == null || typeof list[i].stockId == 'undefined') {
 					result.push(list[i].index);
 				} */
-				if (list[i].FAuxStockQty == null || list[i].FAuxStockQty == 0 || typeof list[i].FAuxStockQty == '') {
+				if (list[i].quantity == null || list[i].quantity == 0 || typeof list[i].quantity == '') {
 					result.push(list[i].index);
 				}
 				obj.fsourceBillNo = list[i].fsourceBillNo == null || list[i].fsourceBillNo == 'undefined' ? '' : list[i].fsourceBillNo;
@@ -398,6 +399,7 @@ export default {
 						sales
 							.saleStockOut(portData)
 							.then(res => {
+								console.log(res)
 								if (res.success) {
 									this.cuIList = [];
 									uni.showToast({
@@ -518,26 +520,71 @@ export default {
 			let number = 0;
 			if (that.isOrder) {
 				let resData = res.split(',')
-				for (let i in that.cuIList) {
-					if(resData[0] == that.cuIList[i]['ForderID'] && resData[1] == that.cuIList[i]['FOrderEntryID']){
-						if (that.cuIList[i]['onFBarCode'].indexOf(resData[0]+','+resData[1]+','+resData[2])) {
-							/* if((parseFloat(resData[3]) + parseFloat(that.cuIList[i]['FAuxStockQty']))< parseFloat(that.cuIList[i]['quantity'])){ */
-								that.cuIList[i]['onFBarCode'].push(resData[0]+','+resData[1]+','+resData[2])
-								that.cuIList[i]['FAuxStockQty'] = (parseFloat(resData[3]) + parseFloat(that.cuIList[i]['FAuxStockQty']))
-							/* }else{
+				for (let i in that.dataList) {
+					//判断是否属于单据物料
+					if(resData[0] == that.dataList[i]['FPrdBillNo'] && resData[7] == that.dataList[i]['number']&& resData[8] == that.dataList[i]['model']){
+						//判断已插入表数据，长度为0 则不用检验条码是否重复
+						if(that.cuIList.length>0){
+							console.log(that.dataList[i]['onFBarCode'].indexOf(res))
+							if (that.dataList[i]['onFBarCode'].indexOf(res) ==-1) {
+								that.cuIList.push({
+									Fdate: that.dataList[i].Fdate,
+									number: that.dataList[i].number,
+									name: that.dataList[i].name,
+									model: that.dataList[i].model,
+									FBatchManager: that.dataList[i].FBatchManager,
+									fsourceBillNo: that.dataList[i].fsourceBillNo,
+									Famount: that.dataList[i].Famount,
+									onFBarCode: res,
+									FBarCode: res,
+									bNum: resData[3],
+									FOrderEntryID: that.dataList[i].FOrderEntryID,
+									ForderID: that.dataList[i].ForderID,
+									FPrdBillNo: that.dataList[i].FPrdBillNo,
+									FBarCode: that.dataList[i].FBarCode,
+									Fauxprice: that.dataList[i].Fauxprice,
+									fsourceEntryId: that.dataList[i].fsourceEntryId,
+									fsourceTranType: that.dataList[i].fsourceTranType,
+									quantity: resData[2],
+									unitID: that.dataList[i].unitID,
+									unitName: that.dataList[i].unitName
+								});
+								that.dataList[i]['onFBarCode'].push(res)
+								that.form.bNum += parseFloat(resData[3]);
+							}else{
 								uni.showToast({
 									icon: 'none',
-									title: '实发数量不能大于订单数量！'
+									title: '该条码已扫描！'
 								});
 								break;
-							} */
+							}
 						}else{
-							uni.showToast({
-								icon: 'none',
-								title: '该条码已扫描！'
+							that.cuIList.push({
+								Fdate: that.dataList[i].Fdate,
+								number: that.dataList[i].number,
+								name: that.dataList[i].name,
+								model: that.dataList[i].model,
+								FBatchManager: that.dataList[i].FBatchManager,
+								fsourceBillNo: that.dataList[i].fsourceBillNo,
+								Famount: that.dataList[i].Famount,
+								onFBarCode: res,
+								FBarCode: res,
+								bNum: resData[3],
+								FOrderEntryID: that.dataList[i].FOrderEntryID,
+								ForderID: that.dataList[i].ForderID,
+								FPrdBillNo: that.dataList[i].FPrdBillNo,
+								FBarCode: that.dataList[i].FBarCode,
+								Fauxprice: that.dataList[i].Fauxprice,
+								fsourceEntryId: that.dataList[i].fsourceEntryId,
+								fsourceTranType: that.dataList[i].fsourceTranType,
+								quantity: resData[2],
+								unitID: that.dataList[i].unitID,
+								unitName: that.dataList[i].unitName
 							});
-							break;
+							that.dataList[i]['onFBarCode'].push(res)
+							that.form.bNum += parseFloat(resData[3]);
 						}
+						
 					} else {
 						number ++;
 					}

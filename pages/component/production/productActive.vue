@@ -94,6 +94,7 @@
 			})
 		},
 		onLoad: function (option){
+			let me = this;
 			// 列表数据默认加载
 			_self = this;
 			if(JSON.stringify(option) != "{}"){
@@ -108,6 +109,11 @@
 				this.end = this.getDay('', 0).date
 				this.getNewsList()
 			}
+			uni.$on('scancodedate', function(data) {
+				// _this 这里面的方法用这个 _this.code(data.code)
+				me.keyword = data.code.split(',')[0]
+				me.getNewsList();
+			});
 		},
 		onReady: function() {
 				 var me = this
@@ -180,6 +186,10 @@
 						title: err.msg
 					});
 				});
+		},
+		onUnload() {
+			// 移除监听事件
+			uni.$off('scancodedate');
 		},
 		methods: {
 			// 产品列表数据

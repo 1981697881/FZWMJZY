@@ -223,6 +223,7 @@ export default {
 								bNum: 0,
 								Fauxqty: data[i].Fauxqty,
 								fbatchNo: '',
+								onFBarCode: [],
 								FBatchManager: data[i].FBatchManager,
 								fsourceBillNo: data[i].FBillNo,
 								Fauxprice: data[i].Fauxprice,
@@ -268,7 +269,7 @@ export default {
 							})
 							.exec();
 						setTimeout(function() {
-							me.pageHeight = res.windowHeight - infoHeight - headHeight - 50;
+							me.pageHeight = res.windowHeight - infoHeight - headHeight;
 						}, 1000);
 					}
 				});
@@ -528,17 +529,19 @@ export default {
 				let resData = res.split(',');
 				for (let i in that.cuIList) {
 					if (resData[0] == that.cuIList[i]['number']) {
-						if (that.cuIList[i]['onFBarCode'] != res) {
+						if (that.cuIList[i]['onFBarCode'].indexOf(res) == -1) {
 							if (that.cuIList[i]['fbatchNo'] == '') {
 								that.cuIList[i]['quantity'] = resData[2];
 								that.cuIList[i]['fbatchNo'] = resData[1];
 								that.cuIList[i]['bNum'] = resData[3];
-								that.cuIList[i]['onFBarCode'] = res
+								that.cuIList[i]['onFBarCode'].push(res)
 								that.form.bNum += parseFloat(resData[3]);
+								break;
 							} else {
 								if (resData[1] == that.cuIList[i]['fbatchNo']) {
 									that.cuIList[i]['quantity'] = parseFloat(that.cuIList[i]['quantity']) + parseFloat(resData[2]);
 									that.cuIList[i]['bNum'] = parseFloat(that.cuIList[i]['bNum']) + parseFloat(resData[3]);
+									that.cuIList[i]['onFBarCode'].push(res)
 									that.form.bNum += parseFloat(resData[3]);
 								} else {
 									that.form.bNum += parseFloat(resData[3]); 
@@ -550,7 +553,7 @@ export default {
 										FNoteType: that.cuIList[i]['FNoteType'],
 										quantity: resData[2],
 										bNum: resData[3],
-										onFBarCode: res,
+										onFBarCode: [res],
 										Fauxqty: that.cuIList[i]['Fauxqty'],
 										fbatchNo: resData[1],
 										FBatchManager: that.cuIList[i]['FBatchManager'],
@@ -564,6 +567,7 @@ export default {
 										unitName: that.cuIList[i]['unitName']
 									});
 								}
+								break;
 							}
 						}else{
 							uni.showToast({

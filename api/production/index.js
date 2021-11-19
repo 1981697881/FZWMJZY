@@ -18,5 +18,14 @@ export default {
             },
 			data: params
         });
-    }
+    },
+	getItemList(params) {
+	    return Request().post('/barcodePrint/getItemList', {
+	        header: {
+				contentType: 'application/json',
+				accept: '*/*'
+	        },
+			data: params
+	    });
+	}
 };
