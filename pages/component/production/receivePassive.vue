@@ -43,7 +43,7 @@
 					></ld-select>
 				</view> -->
 				<view class="action">
-					<view style="width: 90px;">类型:</view>
+					<view style="width: 90px;">类别:</view>
 					<ld-select :list="typeList" list-key="FName" value-key="FNumber" placeholder="请选择" clearable
 						v-model="form.FLevel" @change="typeChange"></ld-select>
 				</view>
@@ -372,8 +372,8 @@
 						uni.showToast({
 							icon: 'none',
 							title: err.msg
-							});
-				});
+						});
+					});
 				production
 					.getItemList({
 						parentNumber: 'YL.',
@@ -572,6 +572,7 @@
 				this.$set(item, 'positions', '');
 				this.$set(item, 'FIsStockMgr', this.stockList[e.detail.value].FIsStockMgr);
 			},
+			// 调用摄像头扫描
 			fabClick() {
 				var that = this;
 				let number = 0;
@@ -581,85 +582,99 @@
 					}
 				});
 			},
+			// 扫码解析
 			getScanInfo(res) {
 				var that = this;
 				let number = 0;
-				if(that.form.FLevel){
+				//判断是否选择类别
+				if (that.form.FLevel) {
+					// 判断无源单
 					if (!that.isOrder) {
 						let resData = res.split(',');
-						for (let i in that.cuIList) {
-							if (resData[0] == that.cuIList[i]['number']) {
-								if (that.cuIList[i]['fbatchNo'] == '') {
-									that.cuIList[i]['quantity'] = resData[2];
-									that.cuIList[i]['fbatchNo'] = resData[1];
-									that.cuIList[i]['bNum'] = resData[3];
-									that.form.bNum += parseFloat(resData[3]);
-								} else {
-									if (resData[1] == that.cuIList[i]['fbatchNo']) {
-										that.cuIList[i]['quantity'] = parseFloat(that.cuIList[i]['quantity']) + parseFloat(
-											resData[2]);
-										that.cuIList[i]['bNum'] = parseFloat(that.cuIList[i]['bNum']) + parseFloat(resData[3]);
+						// 判断类型是否一致
+						if (resData[0].substring(0, that.form.FLevel.length) == that.form.FLevel) {
+							for (let i in that.cuIList) {
+								if (resData[0] == that.cuIList[i]['number']) {
+									if (that.cuIList[i]['fbatchNo'] == '') {
+										that.cuIList[i]['quantity'] = resData[2];
+										that.cuIList[i]['fbatchNo'] = resData[1];
+										that.cuIList[i]['bNum'] = resData[3];
 										that.form.bNum += parseFloat(resData[3]);
 									} else {
-										that.form.bNum += parseFloat(resData[3]);
-										that.cuIList.push({
-											number: that.cuIList[i]['number'],
-											name: that.cuIList[i]['name'],
-											model: that.cuIList[i]['model'],
-											quantity: resData[2],
-											bNum: resData[3],
-											fbatchNo: resData[1],
-											/* Fauxprice: that.cuIList[i]['Fauxprice'],
-											Famount: that.cuIList[i]['Famount'],
-											FBatchManager: that.cuIList[i]['FBatchManager'],
-											fsourceBillNo: that.cuIList[i]['fsourceBillNo'],
-											fsourceEntryID: that.cuIList[i]['fsourceEntryID'],
-											Fauxqty: that.cuIList[i]['Fauxqty'],
-											fsourceTranType: that.cuIList[i]['fsourceTranType'], */
-											unitID: that.cuIList[i]['unitID'],
-											unitName: that.cuIList[i]['unitName']
-										});
+										if (resData[1] == that.cuIList[i]['fbatchNo']) {
+											that.cuIList[i]['quantity'] = parseFloat(that.cuIList[i]['quantity']) +
+												parseFloat(
+													resData[2]);
+											that.cuIList[i]['bNum'] = parseFloat(that.cuIList[i]['bNum']) + parseFloat(
+												resData[3]);
+											that.form.bNum += parseFloat(resData[3]);
+										} else {
+											that.form.bNum += parseFloat(resData[3]);
+											that.cuIList.push({
+												number: that.cuIList[i]['number'],
+												name: that.cuIList[i]['name'],
+												model: that.cuIList[i]['model'],
+												quantity: resData[2],
+												bNum: resData[3],
+												fbatchNo: resData[1],
+												/* Fauxprice: that.cuIList[i]['Fauxprice'],
+												Famount: that.cuIList[i]['Famount'],
+												FBatchManager: that.cuIList[i]['FBatchManager'],
+												fsourceBillNo: that.cuIList[i]['fsourceBillNo'],
+												fsourceEntryID: that.cuIList[i]['fsourceEntryID'],
+												Fauxqty: that.cuIList[i]['Fauxqty'],
+												fsourceTranType: that.cuIList[i]['fsourceTranType'], */
+												unitID: that.cuIList[i]['unitID'],
+												unitName: that.cuIList[i]['unitName']
+											});
+										}
 									}
+									number++;
 								}
-								number++;
 							}
-						}
-						console.log(number)
-						if (number == 0) {
-							that.form.bNum += parseFloat(resData[3]);
-							basic
-								.getItemList({
-									number: resData[0],
-								})
-								.then(res => {
-									console.log(res)
-									if (res.success) {
-										let data = res.data.list;
-										that.cuIList.push({
-											number: data[0].FNumber,
-											name: data[0].FName,
-											model: data[0].FModel,
-											/* Fauxprice: data[0].Fauxprice,
-											Famount: data[0].Famount,
-											FBatchManager: data[0].FBatchManager,
-											fsourceBillNo: data[0].FBillNo,
-											fsourceEntryID: data[0].FEntryID,
-											fsourceTranType: data[0].FTranType, */
-											quantity: resData[2],
-											bNum: resData[3],
-											fbatchNo: resData[1],
-											unitID: data[0].FUnitNumber,
-											unitName: data[0].FUnitName
+							if (number == 0) {
+								that.form.bNum += parseFloat(resData[3]);
+								basic
+									.getItemList({
+										number: resData[0],
+									})
+									.then(res => {
+										console.log(res)
+										if (res.success) {
+											let data = res.data.list;
+											that.cuIList.push({
+												number: data[0].FNumber,
+												name: data[0].FName,
+												model: data[0].FModel,
+												/* Fauxprice: data[0].Fauxprice,
+												Famount: data[0].Famount,
+												FBatchManager: data[0].FBatchManager,
+												fsourceBillNo: data[0].FBillNo,
+												fsourceEntryID: data[0].FEntryID,
+												fsourceTranType: data[0].FTranType, */
+												quantity: resData[2],
+												bNum: resData[3],
+												fbatchNo: resData[1],
+												unitID: data[0].FUnitNumber,
+												unitName: data[0].FUnitName
+											});
+										}
+									})
+									.catch(err => {
+										uni.showToast({
+											icon: 'none',
+											title: err.msg
 										});
-									}
-								})
-								.catch(err => {
-									uni.showToast({
-										icon: 'none',
-										title: err.msg
 									});
-								});
+							}
+						} else {
+							uni.showToast({
+								icon: 'none',
+								title: '选择类别和二维码类别不一致！'
+							});
 						}
+
+
 					} else {
 						if (number == that.cuIList.length) {
 							uni.showToast({
@@ -668,10 +683,10 @@
 							});
 						}
 					}
-				}else{
+				} else {
 					uni.showToast({
 						icon: 'none',
-						title: '扫码前请选择类型！'
+						title: '扫码前请选择类别！'
 					});
 				}
 			},
