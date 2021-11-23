@@ -111,7 +111,8 @@
 			}
 			uni.$on('scancodedate', function(data) {
 				// _this 这里面的方法用这个 _this.code(data.code)
-				me.keyword = data.code.split(',')[0]
+				let code = data.code.split(',');
+				me.keyword = code[0]+','+code[1]
 				me.getNewsList();
 			});
 		},

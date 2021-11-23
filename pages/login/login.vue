@@ -96,6 +96,17 @@
 				isDevtools: false,
 			}
 		},
+		onLoad() {
+			let me = this;
+			uni.$on('scancodedate', function(data) {
+				// _this 这里面的方法用这个 _this.code(data.code)
+				me.popupForm.URL = data.code;
+			});
+		},
+		onUnload() {
+			// 移除监听事件
+			uni.$off('scancodedate');
+		},
 		created(){
 			if(service.getUrls().url !='' && typeof service.getUrls().url != "undefined"){
 				this.popupForm.URL = service.getUrls().url

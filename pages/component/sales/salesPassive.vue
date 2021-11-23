@@ -83,6 +83,17 @@
 							<view class="text-grey">规格:{{ item.model }}</view>
 							<view class="text-grey"></view>
 							<view class="text-grey">{{ item.stockName }}</view>
+							<view class="text-grey">
+								<picker @change="PickerChange($event, item)" :value="pickerVal" :range-key="'FName'"
+									:range="stockList">
+									<view class="picker">
+										<button class="cu-btn sm round bg-green shadow">
+											<text class="cuIcon-homefill"></text>
+											仓库
+										</button>
+									</view>
+								</picker>
+							</view>
 						</view>
 					</view>
 				</view>
@@ -521,12 +532,14 @@ export default {
 			if (that.isOrder) {
 				let resData = res.split(',')
 				for (let i in that.dataList) {
+					console.log(resData)
+					console.log(that.dataList[i])
 					//判断是否属于单据物料
 					if(resData[0] == that.dataList[i]['FPrdBillNo'] && resData[7] == that.dataList[i]['number']&& resData[8] == that.dataList[i]['model']){
 						//判断已插入表数据，长度为0 则不用检验条码是否重复
 						if(that.cuIList.length>0){
-							console.log(that.dataList[i]['onFBarCode'].indexOf(res))
 							if (that.dataList[i]['onFBarCode'].indexOf(res) ==-1) {
+								that.dataList[i]['onFBarCode'].push(res)
 								that.cuIList.push({
 									Fdate: that.dataList[i].Fdate,
 									number: that.dataList[i].number,
@@ -549,7 +562,6 @@ export default {
 									unitID: that.dataList[i].unitID,
 									unitName: that.dataList[i].unitName
 								});
-								that.dataList[i]['onFBarCode'].push(res)
 								that.form.bNum += parseFloat(resData[3]);
 							}else{
 								uni.showToast({
@@ -559,6 +571,7 @@ export default {
 								break;
 							}
 						}else{
+							that.dataList[i]['onFBarCode'].push(res)
 							that.cuIList.push({
 								Fdate: that.dataList[i].Fdate,
 								number: that.dataList[i].number,
@@ -581,15 +594,13 @@ export default {
 								unitID: that.dataList[i].unitID,
 								unitName: that.dataList[i].unitName
 							});
-							that.dataList[i]['onFBarCode'].push(res)
 							that.form.bNum += parseFloat(resData[3]);
 						}
-						
 					} else {
 						number ++;
 					}
 				}
-				if(number == that.cuIList.length){
+				if(number == that.dataList.length){
 					uni.showToast({
 						icon: 'none',
 						title: '该物料不在所选单据中！'
