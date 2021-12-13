@@ -23,7 +23,7 @@
 					Vue.prototype.CustomBar = e.statusBarHeight + e.titleBarHeight;
 					// #endif
 				}
-			})		
+			})
 			Vue.prototype.ColorList = [{									
 					title: '嫣红',
 					name: 'red',

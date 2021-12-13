@@ -188,7 +188,7 @@
 					});
 				});
 		},
-		onUnload() {
+		onHide() {
 			// 移除监听事件
 			uni.$off('scancodedate');
 		},

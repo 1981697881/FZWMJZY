@@ -65,8 +65,8 @@
 		</view>
 		<scroll-view scroll-y class="page" :style="{ height: pageHeight + 'px' }">
 			<view v-for="(item, index) in cuIList" :key="index">
-				<view class="cu-list menu-avatar">
-					<view class="cu-item" style="width: 100%;margin-top: 2px;height: 320upx;" :data-target="'move-box-' + index">
+				<view class="cu-list menu-avatar" :class="item.onFBarCode?'bg-blue':'bg-white'">
+					<view class="cu-item" style="width: 100%;margin-top: 2px;height: 320upx;"  :data-target="'move-box-' + index">
 						<view style="clear: both;width: 100%;">
 							<view style="clear: both;width: 100%;" class="grid text-center col-2" data-target="Modal" data-number="item.number">
 								<view class="text-grey">序号:{{ (item.index = index + 1) }}</view>
@@ -198,6 +198,10 @@ export default {
 					});
 				});
 		}
+		
+	},
+	onShow() {
+		let me = this;
 		uni.$on('scancodedate', function(data) {
 			// _this 这里面的方法用这个 _this.code(data.code)
 			me.getScanInfo(data.code);

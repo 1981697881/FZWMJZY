@@ -554,7 +554,6 @@ export default {
 					.inventoryByBarcode({ uuid: res })
 					.then(reso => {
 						//if(reso.success){
-						console.log(reso);
 						for (let i in reso.data) {
 							that.cuIList.push(reso.data[i]);
 							that.form.bNum = that.cuIList.length;
