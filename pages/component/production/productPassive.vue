@@ -180,12 +180,14 @@ export default {
 								FBatchManager: data[i].FBatchManager,
 								fsourceEntryID: data[i].fsourceEntryID,
 								fsourceTranType: data[i].FTranType,
-								FAuxStockQty: data[i].FAuxStockQty,
+								FAuxStockQty: data[i].Fauxqty,
 								Fauxqty: data[i].Fauxqty,
 								fsourceBillNo: data[i].FBillNo,
 								unitID: data[i].FUnitNumber,
 								unitName: data[i].FUnitName,
-								quantity: data[i].Fauxqty
+								quantity: data[i].Fauxqty,
+								stockName: data[i].FDefaultStockName,
+								stockId: data[i].FDefaultStockNumber,
 							});
 						}
 						me.form.bNum = data.length;
@@ -236,7 +238,7 @@ export default {
 							})
 							.exec();
 						setTimeout(function() {
-							me.pageHeight = res.windowHeight - infoHeight - headHeight;
+							me.pageHeight = res.windowHeight - infoHeight - headHeight -30;
 						}, 1000);
 					}
 				});

@@ -90,14 +90,11 @@
 		},
 		watch: {
 			sValue (val) {
-				console.log(val)
-				console.log(this.list)
-				console.log(412414)
-					  this.bValue = this.getBValye(val)
-					  this.$emit('change', val)
+				this.bValue = this.getBValye(val)
+				this.$emit('change', val)
 			}
 		},
-		created() {
+		mounted() {
 			if(Array.isArray(this.value)){
 				this.sValue = this.value?this.value:[]
 			} else {

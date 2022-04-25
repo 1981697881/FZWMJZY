@@ -150,5 +150,13 @@ export default {
 	        },
 			data: params
 	    });
+	},//条码判断
+	checkBarCode(params) {
+	    return Request().post('/api/basic/checkBarCode', {
+	        header: {
+				accept: '*/*'
+	        },
+			data: params
+	    });
 	},
 };
