@@ -30,7 +30,7 @@
 		</view>
 		<scroll-view scroll-y class="page" :style="{ 'height': pageHeight + 'px' }">
 			<view v-for="(item,index) in cuIconList" :key="index">
-				<view class="cu-list menu-avatar">
+				<view class="cu-list menu-avatar"> 
 					<view class="cu-item" style="width: 100%;margin-top: 2px;height: 260upx;">
 						<view style="clear: both;width: 100%;" class="grid text-left col-2"
 							@tap="$manyCk(showList(index, item))" data-target="Modal" data-number="item.number">
@@ -79,6 +79,7 @@
 			};
 		},
 		onShow: function(option) {
+			let me = this;
 			uni.$on("handleBack", res => {
 				this.start = res.startDate
 				this.end = res.endDate
@@ -87,6 +88,11 @@
 				// 清除监听
 				uni.$off('handleBack')
 			})
+			uni.$on('scancodedate', function(data) {
+				// _this 这里面的方法用这个 _this.code(data.code)
+				me.keyword = data.code.split(",")[0];
+				me.getNewsList();
+			});
 		},
 		onLoad: function(option) {
 			// 列表数据默认加载
@@ -147,7 +153,6 @@
 				.getOrderList(obj)
 				.then(res => {
 					if (res.success) {
-						console.log(res)
 						if (_self.cuIconList.length == res.data.total) {
 							//没有数据
 							_self.loadingType = 2;
@@ -176,6 +181,10 @@
 					});
 				});
 		},
+		onHide() {
+			// 移除监听事件
+			uni.$off('scancodedate');
+		},
 		methods: {
 			// 产品列表数据
 			getNewsList: function() {
@@ -187,7 +196,6 @@
 					.getOrderList(this.qFilter())
 					.then(res => {
 						if (res.success) {
-							console.log(res);
 							_self.cuIconList = res.data.list;
 							uni.hideNavigationBarLoading();
 							uni.stopPullDownRefresh(); //得到数据后停止下拉刷新

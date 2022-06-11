@@ -34,7 +34,7 @@
 						value-key="FNumber"
 						placeholder="请选择"
 						clearable
-						disabled="true"
+						:disabled="true"
 						v-model="form.fdCStockId"
 						@change="stockChange"
 					></ld-select>
@@ -161,7 +161,7 @@ export default {
 			gridCol: 3,
 			form: {
 				finBillNo: null,
-				fdate: '',
+				fdate: '2020-01-01',
 				bNum: 0,
 				fnote: '',
 				fbillerID: null,

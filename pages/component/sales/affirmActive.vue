@@ -210,7 +210,7 @@
 				console.log(item)
 				uni.navigateTo({
 					//url: '../sales/salesPassive?Fdate='+item.Fdate+'&FBillNo='+item.FBillNo+'&FNumber='+item.FItemNumber+'&FItemName='+item.FItemName+'&FModel='+item.FModel+'&Fauxqty='+item.Fauxqty+'&fsourceBillNo='+item.FBillNo+'&fsourceEntryID='+item.FSourceEntryID+'&fsourceTranType='+item.FTranType+'&unitNumber='+item.FUnitNumber+'&FCustName='+item.FCustName+'&FUnitName='+item.FUnitName+'&FCustNumber='+item.FCustNumber+'&Famount='+item.Famount+'&Fauxprice='+item.Fauxprice+'&FDeptNumber='+item.FDeptNumber+'&Fauxqty='+item.Fauxqty,
-					url: '../sales/salesPassive?billNo='+item.FBillNo+'&tranType='+this.source+'&type=2&startDate='+this.start+'&endDate='+this.end+'&FDeptNumber='+item.FDeptNumber+'&FCustNumber='+item.FCustNumber+'&FCustName='+item.FCustName
+					url: '../sales/affirmPassive?billNo='+item.FBillNo+'&tranType='+this.source+'&type=2&startDate='+this.start+'&endDate='+this.end+'&FDeptNumber='+item.FDeptNumber+'&FCustNumber='+item.FCustNumber+'&FCustName='+item.FCustName
 				});
 			},
 			fetchData(val = ''){

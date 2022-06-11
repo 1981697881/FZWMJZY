@@ -98,14 +98,14 @@
 			// 列表数据默认加载
 			_self = this;
 			if(JSON.stringify(option) != "{}"){
-			this.start = this.getDay('', -3).date
+			this.start = this.getDay('', -30).date
 			this.end = this.getDay('', 0).date
 			if(option.source != null){
 				this.source = option.source
 			}
 			this.getNewsList()
 			}else{
-				this.start = this.getDay('', -3).date
+				this.start = this.getDay('', -30).date
 				this.end = this.getDay('', 0).date
 				this.getNewsList()
 			}

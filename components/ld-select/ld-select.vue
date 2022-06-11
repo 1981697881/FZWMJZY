@@ -90,8 +90,10 @@
 		},
 		watch: {
 			sValue (val) {
-				this.bValue = this.getBValye(val)
-				this.$emit('change', val)
+				if(val != ""){
+					this.bValue = this.getBValye(val)
+					this.$emit('change', val)
+				}
 			}
 		},
 		mounted() {
@@ -120,7 +122,11 @@
 							let val_val = this.getValueKeyValue(temp)
 							return val === val_val
 						})
-						return this.getListKeyValue(choose)
+						if (typeof(choose) == "undefined"){
+							return ""
+						}else{
+							return this.getListKeyValue(choose)
+						}
 					}
 				} else {
 					return ""

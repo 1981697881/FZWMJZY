@@ -71,7 +71,7 @@
 			</view>
 		</view>
 		<view class="cu-modal" :class="modalName2 == 'Modal' ? 'show' : ''">
-			<view class="cu-dialog" style="height: 290upx;">
+			<view class="cu-dialog" style="height: auto;">
 				<view class="cu-bar bg-white justify-end" style="height: 60upx;">
 					<view class="content">{{ popupForm.headName }}</view>
 					<view class="action" @tap="hideModal2"><text class="cuIcon-close text-red"></text></view>
@@ -83,6 +83,15 @@
 								<view class="cu-form-group">
 									<view class="title">数量:</view>
 									<input name="input" type="digit" style="border-bottom: 1px solid;" v-model="popupForm.quantity" />
+								</view>
+							</view>
+						</view>
+					</view>
+					<view class="cu-item" style="width: 100%;height: auto;">
+						<view class="flex">
+							<view class="flex-sub">
+								<view class="cu-form-group">
+									<view class="title">库存数:{{inPosition}}</view>
 								</view>
 							</view>
 						</view>
@@ -197,7 +206,7 @@
 				gridCol: 3,
 				form: {
 					finBillNo: null,
-					fdate: '',
+					fdate: '2020-01-01',
 					bNum: 0,
 					fnote: '',
 					fsManagerID: '',
@@ -211,6 +220,7 @@
 					quantity: ''
 				},
 				skin: false,
+				inPosition: null,
 				listTouchStart: 0,
 				listTouchDirection: null,
 				deptList: [],
@@ -337,13 +347,14 @@
 			saveCom() {
 				var me = this;
 				if (this.popupForm.quantity > me.borrowItem.quantity) {
-					return uni.showToast({
+					/* return uni.showToast({
 						icon: 'none',
 						title: "领料数量不能大于扫码数量"
-					});
+					}); */
+					me.submitCom()
 					/* uni.showModal({
 						title: '温馨提示',
-						content: '领料数量！请确认！',
+						content: '领料数量不能大于扫码数量！请确认！',
 						success: function(res) {
 							if (res.confirm) {
 								me.submitCom()
@@ -366,6 +377,27 @@
 					quantity: item.quantity,
 				};
 				this.borrowItem = item;
+				basic
+					.inventoryByBarcode({
+						uuid:  item.number+ "," +item.fbatchNo
+					})
+					.then(reso => {
+						if (reso.success) {
+							console.log(reso);
+							let str = 0
+							reso.data.forEach((resItem)=>{
+								/* str +=resItem.FStockPlacename+'('+resItem.FQty+')'+',' */
+								str +=Number(resItem.FQty)
+							})
+							this.inPosition = str
+						}
+					})
+					.catch(err => {
+						uni.showToast({
+							icon: 'none',
+							title: err.msg
+						});
+					});
 			},
 			hideModal2(e) {
 				this.modalName2 = null;

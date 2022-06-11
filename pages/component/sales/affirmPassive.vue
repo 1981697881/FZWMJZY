@@ -123,7 +123,7 @@ export default {
 			gridCol: 3,
 			form: {
 				finBillNo: null,
-				fdate: '',
+				fdate: '2020-01-01',
 				bNum: 0,
 				fnote: '',
 				FCustNumber: '',

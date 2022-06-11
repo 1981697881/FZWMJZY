@@ -77,7 +77,7 @@
 						:data-target="'move-box-' + index">
 						<view style="clear: both;width: 100%;" class="grid text-center col-2" data-target="Modal"
 							data-number="item.number">
-							<view class="text-grey">序号:{{ (item.index = index + 1) }}</view>
+							<view class="text-grey">卷号:{{ item.index }}</view>
 							<view class="text-grey">编码:{{ item.number }}</view>
 							<view class="text-grey">名称:{{ item.name }}</view>
 							<view class="text-grey">数量:{{ item.quantity }}</view>
@@ -86,6 +86,7 @@
 							<view class="text-grey">规格:{{ item.model }}</view>
 							<view class="text-grey"></view>
 							<view class="text-grey">{{ item.stockName }}</view>
+							<view class="text-grey">库存数:{{ item.inPosition }}</view>
 							<!-- <view class="text-grey">
 								<picker @change="PickerChange($event, item)" :value="pickerVal" :range-key="'FName'"
 									:range="stockList">
@@ -144,7 +145,7 @@
 				gridCol: 3,
 				form: {
 					finBillNo: null,
-					fdate: '',
+					fdate: '2020-01-01',
 					bNum: 0,
 					fnote: '',
 					fsManagerID: '',
@@ -203,7 +204,6 @@
 					.then(res => {
 						if (res.success) {
 							let data = res.data.list;
-							console.log(data)
 							for (let i in data) {
 								me.dataList.push({
 									Fdate: data[i].Fdate,
@@ -376,10 +376,10 @@
 				let list = this.cuIList;
 				let array = [];
 				let isBatchNo = false;
-				for (let i in list) {
+				for (let i =0;i<list.length; i++ ) {
 					let obj = {};
 					obj.fauxqty = list[i].quantity;
-					obj.fentryId = list[i].index;
+					obj.fentryId = i+1;
 					obj.finBillNo = list[i].FBillNo;
 					/* if (list[i].FBatchManager) {
 						if (list[i].fbatchNo != '' && list[i].fbatchNo != null) {
@@ -398,6 +398,7 @@
 							break;
 						}
 					} */
+					obj.fbatchNo = list[i].fbatchNo;
 					obj.fitemId = list[i].number;
 					obj.fbarcode = list[i].FBarCode;
 					obj.fauxprice = list[i].Fauxprice != null && typeof list[i].Fauxprice != 'undefined' ? list[i]
@@ -451,7 +452,6 @@
 						sales
 							.saleStockOut(portData)
 							.then(res => {
-								console.log(res)
 								if (res.success) {
 									this.cuIList = [];
 									uni.showToast({
@@ -573,7 +573,7 @@
 					}
 				});
 			},
-			getScanInfo(res) {
+			async getScanInfo(res) {
 				var that = this;
 				let number = 0;
 				if (that.isOrder) {
@@ -582,44 +582,64 @@
 							uuid: res,
 						})
 						.then(cres => {
-							console.log(cres);
 							if (cres.success) {
 								if(cres.data.length==0){
 									let resData = res.split(',')
 									for (let i in that.dataList) {
 										//判断是否属于单据物料
-										console.log(resData[0] == that.dataList[i]['FPrdBillNo'])
-										console.log(resData[7] == that.dataList[i]['number'])
 										if (resData[0] == that.dataList[i]['FPrdBillNo'] && resData[7] == that.dataList[i]['number']) {
 											/* && resData[8] == that.dataList[i]['model'] */
 											//判断已插入表数据，长度为0 则不用检验条码是否重复
 											if (that.cuIList.length > 0) {
 												if (that.dataList[i]['onFBarCode'].indexOf(res) == -1) {
 													that.dataList[i]['onFBarCode'].push(res)
-													that.cuIList.push({
-														Fdate: that.dataList[i].Fdate,
-														number: that.dataList[i].number,
-														name: that.dataList[i].name,
-														model: resData[8],
-														FBatchManager: that.dataList[i].FBatchManager,
-														fsourceBillNo: that.dataList[i].fsourceBillNo,
-														Famount: that.dataList[i].Famount,
-														onFBarCode: res,
-														FBarCode: res,
-														bNum: resData[3],
-														FOrderEntryID: that.dataList[i].FOrderEntryID,
-														ForderID: that.dataList[i].ForderID,
-														FPrdBillNo: that.dataList[i].FPrdBillNo,
-														Fauxprice: that.dataList[i].Fauxprice,
-														fsourceEntryId: that.dataList[i].fsourceEntryId,
-														fsourceTranType: that.dataList[i].fsourceTranType,
-														quantity: resData[2],
-														unitID: that.dataList[i].unitID,
-														unitName: that.dataList[i].unitName,
-														stockName: that.dataList[i].stockName,
-														stockId: that.dataList[i].stockId,
-													});
-													that.form.bNum += parseFloat(resData[3]);
+													var inPosition = 0;
+													 basic
+														.inventoryByBarcode({
+															uuid:  res
+														})
+														.then(reso => {
+															if (reso.success) {
+																console.log(reso)
+																reso.data.forEach((resItem)=>{
+																	inPosition +=Number(resItem.FQty);
+																})
+																that.cuIList.push({
+																	Fdate: that.dataList[i].Fdate,
+																	number: that.dataList[i].number,
+																	name: that.dataList[i].name,
+																	model: resData[8],
+																	FBatchManager: that.dataList[i].FBatchManager,
+																	fsourceBillNo: that.dataList[i].fsourceBillNo,
+																	Famount: that.dataList[i].Famount,
+																	onFBarCode: res,
+																	index: resData[2],
+																	FBarCode: res,
+																	bNum: resData[3],
+																	inPosition: inPosition,
+																	FOrderEntryID: that.dataList[i].FOrderEntryID,
+																	ForderID: that.dataList[i].ForderID,
+																	FPrdBillNo: that.dataList[i].FPrdBillNo,
+																	Fauxprice: that.dataList[i].Fauxprice,
+																	fsourceEntryId: that.dataList[i].fsourceEntryId,
+																	fsourceTranType: that.dataList[i].fsourceTranType,
+																	fbatchNo: resData[8],
+																	quantity: resData[3],
+																	unitID: that.dataList[i].unitID,
+																	unitName: that.dataList[i].unitName,
+																	stockName: that.dataList[i].stockName,
+																	stockId: that.dataList[i].stockId,
+																});
+																that.form.bNum += parseFloat(resData[3]);
+															}
+														})
+														.catch(err => {
+															uni.showToast({
+																icon: 'none',
+																title: err.msg
+															});
+														});
+													
 												} else {
 													uni.showToast({
 														icon: 'none',
@@ -629,30 +649,53 @@
 												}
 											} else {
 												that.dataList[i]['onFBarCode'].push(res)
-												that.cuIList.push({
-													Fdate: that.dataList[i].Fdate,
-													number: that.dataList[i].number,
-													name: that.dataList[i].name,
-													model: resData[8],
-													FBatchManager: that.dataList[i].FBatchManager,
-													fsourceBillNo: that.dataList[i].fsourceBillNo,
-													Famount: that.dataList[i].Famount,
-													onFBarCode: res,
-													FBarCode: res,
-													bNum: resData[3],
-													FOrderEntryID: that.dataList[i].FOrderEntryID,
-													ForderID: that.dataList[i].ForderID,
-													FPrdBillNo: that.dataList[i].FPrdBillNo,
-													Fauxprice: that.dataList[i].Fauxprice,
-													fsourceEntryId: that.dataList[i].fsourceEntryId,
-													fsourceTranType: that.dataList[i].fsourceTranType,
-													quantity: resData[2],
-													unitID: that.dataList[i].unitID,
-													unitName: that.dataList[i].unitName,
-													stockName: that.dataList[i].stockName,
-													stockId: that.dataList[i].stockId,
-												});
-												that.form.bNum += parseFloat(resData[3]);
+												var inPosition = 0;
+												 basic
+													.inventoryByBarcode({
+														uuid:  res
+													})
+													.then(reso => {
+														console.log(reso)
+														if (reso.success) {
+															reso.data.forEach((resItem)=>{
+																inPosition +=Number(resItem.FQty);
+															})
+															that.cuIList.push({
+																Fdate: that.dataList[i].Fdate,
+																number: that.dataList[i].number,
+																name: that.dataList[i].name,
+																model: resData[8],
+																FBatchManager: that.dataList[i].FBatchManager,
+																fsourceBillNo: that.dataList[i].fsourceBillNo,
+																Famount: that.dataList[i].Famount,
+																onFBarCode: res,
+																index: resData[2],
+																FBarCode: res,
+																inPosition: inPosition,
+																bNum: resData[3],
+																FOrderEntryID: that.dataList[i].FOrderEntryID,
+																ForderID: that.dataList[i].ForderID,
+																FPrdBillNo: that.dataList[i].FPrdBillNo,
+																Fauxprice: that.dataList[i].Fauxprice,
+																fsourceEntryId: that.dataList[i].fsourceEntryId,
+																fsourceTranType: that.dataList[i].fsourceTranType,
+																quantity: resData[3],
+																fbatchNo: resData[8],
+																unitID: that.dataList[i].unitID,
+																unitName: that.dataList[i].unitName,
+																stockName: that.dataList[i].stockName,
+																stockId: that.dataList[i].stockId,
+															});
+															that.form.bNum += parseFloat(resData[3]);
+														}
+													})
+													.catch(err => {
+														uni.showToast({
+															icon: 'none',
+															title: err.msg
+														});
+													});
+												
 											}
 										} else {
 											number++;
